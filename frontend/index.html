@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Pessoas</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .config-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            border-left: 6px solid #4facfe;
+        }
+        
+        .config-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .api-controls {
+            display: flex;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        
+        .api-input-wrapper {
+            flex: 1;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.15);
+            transform: translateY(-1px);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(-1px);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-small {
+            width: auto;
+            padding: 12px 24px;
+            font-size: 14px;
+            min-width: 140px;
+        }
+        
+        .btn-test {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .btn-test.online {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .btn-test.offline {
+            background: linear-gradient(135deg, #dc3545 0%, #fd7e14 100%);
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-online {
+            background-color: #28a745;
+        }
+        
+        .status-offline {
+            background-color: #dc3545;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .alert {
+            padding: 18px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            font-weight: 500;
+            animation: slideIn 0.3s ease;
+        }
+        
+        .alert.success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert.error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pessoas-lista {
+            margin-top: 50px;
+        }
+        
+        .pessoas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #e1e5e9;
+        }
+        
+        .pessoas-header h2 {
+            color: #333;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .contador {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .pessoa-item {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .pessoa-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-left-color: #4facfe;
+        }
+        
+        .pessoa-info {
+            flex: 1;
+        }
+        
+        .pessoa-nome {
+            font-weight: 700;
+            color: #333;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+        
+        .pessoa-email {
+            color: #666;
+            font-size: 1rem;
+            opacity: 0.8;
+        }
+        
+        .pessoa-data {
+            color: #999;
+            font-size: 0.85rem;
+            margin-top: 5px;
+        }
+        
+        .btn-delete {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: #666;
+            font-style: italic;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+            border: 2px dashed #dee2e6;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .form-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            padding: 35px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .disabled-overlay {
+            position: relative;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        
+        .disabled-overlay::after {
+            content: "Configure a API primeiro";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 10;
+        }
+        
+        @media (max-width: 768px) {
+            .api-controls {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .btn-small {
+                width: 100%;
+            }
+            
+            .pessoas-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .pessoa-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+            }
+            
+            .btn-delete {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>📝 Cadastro de Pessoas</h1>
+                <p>Sistema online com GitHub Pages + API</p>
+            </div>
+            
+            <div class="content">
+                <!-- Configuração da API -->
+                <div class="config-section">
+                    <div class="config-title">
+                        ⚙️ Configuração da API
+                    </div>
+                    <div class="api-controls">
+                        <div class="api-input-wrapper">
+                            <label>URL da API:</label>
+                            <input 
+                                v-model="apiUrl" 
+                                placeholder="https://sua-api.onrender.com"
+                                @keyup.enter="testarConexao"
+                            >
+                        </div>
+                        <button 
+                            @click="testarConexao" 
+                            :class="['btn', 'btn-small', 'btn-test', statusApi ? 'online' : 'offline']"
+                            :disabled="testando"
+                        >
+                            <span class="status-indicator" :class="statusApi ? 'status-online' : 'status-offline'"></span>
+                            {{ testando ? 'Testando...' : (statusApi ? 'Online' : 'Testar API') }}
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Alertas -->
+                <div v-if="mensagem" :class="['alert', tipoMensagem]">
+                    {{ mensagem }}
+                </div>
+                
+                <!-- Formulário de Cadastro -->
+                <div :class="['form-section', !statusApi && 'disabled-overlay']">
+                    <form @submit.prevent="cadastrarPessoa" v-if="statusApi">
+                        <div class="form-group">
+                            <label for="nome">👤 Nome Completo:</label>
+                            <input 
+                                type="text" 
+                                id="nome" 
+                                v-model="form.nome"
+                                placeholder="Digite o nome completo"
+                                required
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">📧 E-mail:</label>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                v-model="form.email"
+                                placeholder="Digite o e-mail"
+                                required
+                            >
+                        </div>
+                        
+                        <button 
+                            type="submit" 
+                            class="btn"
+                            :disabled="carregando"
+                        >
+                            {{ carregando ? '⏳ Cadastrando...' : '✨ Cadastrar Pessoa' }}
+                        </button>
+                    </form>
+                    
+                    <div v-if="!statusApi" style="padding: 40px; text-align: center; color: #666;">
+                        Configure a URL da API acima para começar
+                    </div>
+                </div>
+                
+                <!-- Lista de Pessoas -->
+                <div class="pessoas-lista" v-if="statusApi">
+                    <div class="pessoas-header">
+                        <h2>👥 Pessoas Cadastradas</h2>
+                        <div class="contador">{{ pessoas.length }} pessoa{{ pessoas.length !== 1 ? 's' : '' }}</div>
+                    </div>
+                    
+                    <div v-if="carregandoLista" class="loading">
+                        <div class="loading-spinner"></div>
+                        <div>Carregando lista...</div>
+                    </div>
+                    
+                    <div v-else-if="pessoas.length === 0" class="empty-state">
+                        <div class="empty-state-icon">👤</div>
+                        <div style="font-size: 1.2rem; margin-bottom: 10px;">Nenhuma pessoa cadastrada</div>
+                        <div>Faça o primeiro cadastro usando o formulário acima!</div>
+                    </div>
+                    
+                    <div v-else>
+                        <div 
+                            v-for="pessoa in pessoas" 
+                            :key="pessoa.id"
+                            class="pessoa-item"
+                        >
+                            <div class="pessoa-info">
+                                <div class="pessoa-nome">{{ pessoa.nome }}</div>
+                                <div class="pessoa-email">{{ pessoa.email }}</div>
+                                <div class="pessoa-data">Cadastrado em {{ formatarData(pessoa.dataCadastro) }}</div>
+                            </div>
+                            <button 
+                                @click="deletarPessoa(pessoa.id)"
+                                class="btn-delete"
+                                title="Deletar pessoa"
+                            >
+                                🗑️ Deletar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+        
+        createApp({
+            data() {
+                return {
+                    apiUrl: localStorage.getItem('apiUrl') || '',
+                    statusApi: false,
+                    testando: false,
+                    form: {
+                        nome: '',
+                        email: ''
+                    },
+                    pessoas: [],
+                    mensagem: '',
+                    tipoMensagem: '',
+                    carregando: false,
+                    carregandoLista: false
+                }
+            },
+            
+            methods: {
+                async testarConexao() {
+                    if (!this.apiUrl.trim()) {
+                        this.mostrarMensagem('❌ Digite a URL da API', 'error');
+                        return;
+                    }
+                    
+                    this.testando = true;
+                    
+                    try {
+                        const response = await fetch(this.apiUrl, {
+                            method: 'GET',
+                            headers: { 'Content-Type': 'application/json' }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            this.statusApi = true;
+                            localStorage.setItem('apiUrl', this.apiUrl);
+                            this.mostrarMensagem(`✅ ${data.message || 'API conectada!'}`, 'success');
+                            await this.carregarPessoas();
+                        } else {
+                            throw new Error('API não respondeu corretamente');
+                        }
+                    } catch (error) {
+                        this.statusApi = false;
+                        this.mostrarMensagem('❌ Erro ao conectar com a API. Verifique a URL.', 'error');
+                        console.error('Erro:', error);
+                    }
+                    
+                    this.testando = false;
+                },
+                
+                async cadastrarPessoa() {
+                    this.carregando = true;
+                    this.limparMensagem();
+                    
+                    try {
+                        const response = await fetch(`${this.apiUrl}/api/pessoas`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.form)
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            this.mostrarMensagem(`✅ ${this.form.nome} cadastrado(a) com sucesso! 🎉`, 'success');
+                            this.form.nome = '';
+                            this.form.email = '';
+                            await this.carregarPessoas();
+                        } else {
+                            this.mostrarMensagem(`❌ ${data.erro || 'Erro ao cadastrar pessoa'}`, 'error');
+                        }
+                    } catch (error) {
+                        this.mostrarMensagem('❌ Erro de conexão com o servidor', 'error');
+                        console.error('Erro:', error);
+                    }
+                    
+                    this.carregando = false;
+                },
+                
+                async carregarPessoas() {
+                    if (!this.statusApi) return;
+                    
+                    this.carregandoLista = true;
+                    
+                    try {
+                        const response = await fetch(`${this.apiUrl}/api/pessoas`);
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            this.pessoas = data.sort((a, b) => new Date(b.dataCadastro) - new Date(a.dataCadastro));
+                        }
+                    } catch (error) {
+                        console.error('Erro ao carregar pessoas:', error);
+                    }
+                    
+                    this.carregandoLista = false;
+                },
+                
+                async deletarPessoa(id) {
+                    const pessoa = this.pessoas.find(p => p.id === id);
+                    if (!confirm(`Tem certeza que deseja deletar ${pessoa?.nome}?`)) return;
+                    
+                    try {
+                        const response = await fetch(`${this.apiUrl}/api/pessoas/${id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response.ok) {
+                            this.mostrarMensagem('✅ Pessoa deletada com sucesso!', 'success');
+                            await this.carregarPessoas();
+                        } else {
+                            const data = await response.json();
+                            this.mostrarMensagem(`❌ ${data.erro || 'Erro ao deletar pessoa'}`, 'error');
+                        }
+                    } catch (error) {
+                        this.mostrarMensagem('❌ Erro de conexão com o servidor', 'error');
+                        console.error('Erro:', error);
+                    }
+                },
+                
+                formatarData(dataISO) {
+                    return new Date(dataISO).toLocaleString('pt-BR');
+                },
+                
+                mostrarMensagem(texto, tipo) {
+                    this.mensagem = texto;
+                    this.tipoMensagem = tipo;
+                    setTimeout(() => this.limparMensagem(), 6000);
+                },
+                
+                limparMensagem() {
+                    this.mensagem = '';
+                    this.tipoMensagem = '';
+                }
+            },
+            
+            async mounted() {
+                if (this.apiUrl) {
+                    await this.testarConexao();
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
